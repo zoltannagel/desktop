@@ -384,6 +384,7 @@ export async function rebase(
     })
   }
 
+  debugger
   const result = await git(
     [...gitRebaseArguments(), 'rebase', baseBranch.name, targetBranch.name],
     repository.path,

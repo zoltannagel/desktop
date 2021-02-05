@@ -1895,6 +1895,12 @@ export class Dispatcher {
           retryAction.baseBranch,
           retryAction.targetBranch
         )
+      case RetryActionType.CherryPick:
+        return this.cherryPick(
+          retryAction.repository,
+          retryAction.targetBranch,
+          retryAction.commitSha
+        )
 
       default:
         return assertNever(retryAction, `Unknown retry action: ${retryAction}`)
@@ -2494,5 +2500,91 @@ export class Dispatcher {
 
   public recordDiffOptionsViewed() {
     return this.statsStore.recordDiffOptionsViewed()
+  }
+
+  /** Starts a rebase for the given base and target branch */
+  public async cherryPick(
+    repository: Repository,
+    targetBranch: Branch,
+    commitSha: string
+  ): Promise<void> {
+    /*
+    const stateBefore = this.repositoryStateManager.get(repository)
+
+    const beforeSha = getTipSha(stateBefore.branchesState.tip)
+
+    log.info(
+      `[rebase] starting rebase for ${targetBranch.name} at ${beforeSha}`
+    )
+    log.info(
+      `[rebase] to restore the previous state if this completed rebase is unsatisfactory:`
+    )
+    log.info(`[rebase] - git checkout ${targetBranch.name}`)
+    log.info(`[rebase] - git reset ${beforeSha} --hard`)
+
+    */
+    await this.appStore._cherryPick(repository, targetBranch, commitSha)
+
+    /*
+    await this.appStore._loadStatus(repository)
+
+    const stateAfter = this.repositoryStateManager.get(repository)
+    const { tip } = stateAfter.branchesState
+    const afterSha = getTipSha(tip)
+
+    log.info(
+      `[rebase] completed rebase - got ${result} and on tip ${afterSha} - kind ${tip.kind}`
+    )
+
+    if (result === RebaseResult.ConflictsEncountered) {
+      const { conflictState } = stateAfter.changesState
+      if (conflictState === null) {
+        log.warn(
+          `[rebase] conflict state after rebase is null - unable to continue`
+        )
+        return
+      }
+
+      if (isMergeConflictState(conflictState)) {
+        log.warn(
+          `[rebase] conflict state after rebase is merge conflicts - unable to continue`
+        )
+        return
+      }
+
+      const conflictsWithBranches: RebaseConflictState = {
+        ...conflictState,
+        baseBranch: baseBranch.name,
+        targetBranch: targetBranch.name,
+      }
+
+      this.switchToConflicts(repository, conflictsWithBranches)
+    } else if (result === RebaseResult.CompletedWithoutError) {
+      if (tip.kind !== TipState.Valid) {
+        log.warn(
+          `[rebase] tip after completing rebase is ${tip.kind} but this should be a valid tip if the rebase completed without error`
+        )
+        return
+      }
+
+      this.statsStore.recordRebaseSuccessWithoutConflicts()
+
+      await this.completeRebase(
+        repository,
+        {
+          type: BannerType.SuccessfulRebase,
+          targetBranch: targetBranch.name,
+          baseBranch: baseBranch.name,
+        },
+        tip,
+        beforeSha
+      )
+    } else if (result === RebaseResult.Error) {
+      // we were unable to successfully start the rebase, and an error should
+      // be shown through the default error handling infrastructure, so we can
+      // just abandon the rebase for now
+      this.endRebaseFlow(repository)
+    }
+    */
   }
 }

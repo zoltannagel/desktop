@@ -11,6 +11,7 @@ export enum RetryActionType {
   Checkout,
   Merge,
   Rebase,
+  CherryPick,
 }
 
 /** The retriable actions and their associated data. */
@@ -41,4 +42,10 @@ export type RetryAction =
       repository: Repository
       baseBranch: Branch
       targetBranch: Branch
+    }
+  | {
+      type: RetryActionType.CherryPick
+      repository: Repository
+      targetBranch: Branch
+      commitSha: string
     }

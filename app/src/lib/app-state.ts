@@ -37,6 +37,7 @@ import { RebaseFlowStep } from '../models/rebase-flow-step'
 import { IStashEntry } from '../models/stash-entry'
 import { TutorialStep } from '../models/tutorial-step'
 import { UncommittedChangesStrategy } from '../models/uncommitted-changes-strategy'
+import { GitCherryPickProgress } from '../models/cherry-pick'
 
 export enum SelectionType {
   Repository,
@@ -377,6 +378,8 @@ export interface IRepositoryState {
 
   readonly rebaseState: IRebaseState
 
+  readonly cherryPickState: ICherryPickState
+
   /** The commits loaded, keyed by their full SHA. */
   readonly commitLookup: Map<string, Commit>
 
@@ -517,6 +520,31 @@ export interface IRebaseState {
    * Whether the user has done work to resolve any conflicts as part of this
    * rebase, as the rebase flow should confirm the user wishes to abort the
    * rebase and lose that work.
+   */
+  readonly userHasResolvedConflicts: boolean
+}
+
+/** State associated with a cherry pick being performed on a repository */
+export interface ICherryPickState {
+  /**
+   * The current step of the flow the user should see.
+   */
+  readonly step: number | null
+
+  /**
+   * The underlying Git information associated with the current cherry pick
+   */
+  readonly progress: GitCherryPickProgress | null
+
+  /**
+   * The known range of commits that will be applied to the repository
+   */
+  readonly commits: ReadonlyArray<CommitOneLine> | null
+
+  /**
+   * Whether the user has done work to resolve any conflicts as part of this
+   * cherry pick, as the cherry pick flow should confirm the user wishes to
+   * abort the cherry pick and lose that work.
    */
   readonly userHasResolvedConflicts: boolean
 }

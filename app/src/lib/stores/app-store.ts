@@ -60,6 +60,7 @@ import {
   IFetchProgress,
   IRevertProgress,
   IRebaseProgress,
+  ICherryPickProgress,
 } from '../../models/progress'
 import { Popup, PopupType } from '../../models/popup'
 import { IGitAccount } from '../../models/git-account'
@@ -266,6 +267,7 @@ import {
   getShowSideBySideDiff,
   setShowSideBySideDiff,
 } from '../../ui/lib/diff-mode'
+import { cherryPick, CherryPickResult } from '../git/cherry-pick'
 
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 
@@ -4437,6 +4439,40 @@ export class AppStore extends TypedBaseStore<IAppState> {
     return await gitStore.performFailableOperation(() =>
       createMergeCommit(repository, conflictedFiles, manualResolutions)
     )
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async _cherryPick(
+    repository: Repository,
+    targetBranch: Branch,
+    commitSha: string
+  ): Promise<CherryPickResult> {
+    await this.withAuthenticatingUser(repository, async (r, account) => {
+      await checkoutBranch(repository, account, targetBranch)
+    })
+
+    const progressCallback = (progress: ICherryPickProgress) => {
+      this.repositoryStateCache.updateCherryPickingState(repository, () => ({
+        progress,
+      }))
+
+      this.emitUpdate()
+    }
+
+    const gitStore = this.gitStoreCache.get(repository)
+    const result = await gitStore.performFailableOperation(
+      () => cherryPick(repository, commitSha, progressCallback),
+      {
+        retryAction: {
+          type: RetryActionType.CherryPick,
+          repository,
+          targetBranch,
+          commitSha,
+        },
+      }
+    )
+
+    return result || CherryPickResult.Error
   }
 
   /** This shouldn't be called directly. See `Dispatcher`. */
