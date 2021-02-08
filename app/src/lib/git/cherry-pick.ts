@@ -21,15 +21,16 @@ export enum CherryPickResult {
 /**
  * A stub function to initiate cherry picking in the app.
  *
- * @param commits an array of commits?
+ * @param revisionRange - this could be a single commit sha or could be a range
+ * of commits like sha1..sha2
  */
 export async function cherryPick(
   repository: Repository,
-  commitSha: string,
+  revisionRange: string,
   progressCallback?: (progress: ICherryPickProgress) => void
 ): Promise<CherryPickResult> {
   const result = await git(
-    ['cherry-pick', commitSha],
+    ['cherry-pick', revisionRange],
     repository.path,
     'cherry pick'
   )
